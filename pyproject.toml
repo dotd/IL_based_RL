@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "il-based-rl"
+version = "0.1.0"
+description = "Behavioral Cloning framework using PyTorch and Gymnasium"
+requires-python = ">=3.10"
+dependencies = [
+    "torch>=2.0",
+    "gymnasium[mujoco]>=0.29",
+    "numpy>=1.24",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
