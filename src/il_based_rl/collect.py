@@ -2,16 +2,24 @@
 
 from __future__ import annotations
 
+from typing import Protocol, runtime_checkable
+
 import numpy as np
 import gymnasium as gym
 
-from il_based_rl.agent import BCAgent
 from il_based_rl.dataset import DemoDataset
+
+
+@runtime_checkable
+class Predictable(Protocol):
+    """Any agent that can predict actions from observations."""
+
+    def predict(self, obs: np.ndarray) -> np.ndarray: ...
 
 
 def collect_demos(
     env_id: str,
-    agent: BCAgent | None = None,
+    agent: Predictable | None = None,
     num_episodes: int = 10,
     seed: int | None = None,
 ) -> DemoDataset:
