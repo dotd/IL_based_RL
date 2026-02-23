@@ -78,6 +78,56 @@ All CLI options:
 | `--entropy-coef` | `0.0` | Entropy bonus coefficient |
 | `--seed` | `None` | Random seed |
 | `--save-path` | `checkpoints/ppo_agent.pt` | Checkpoint path |
+| `--resume` | — | Resume from latest checkpoint, or `--resume PATH` for a specific file |
+| `--wandb` | off | Enable Weights & Biases logging |
+| `--wandb-project` | `il-based-rl` | W&B project name |
+| `--wandb-run-name` | auto | W&B run name (auto: `run_YYYYMMDD_HHMM_<env>_<steps>`) |
+
+## Weights & Biases Integration
+
+Training metrics can be logged to [Weights & Biases](https://wandb.ai) for live visualization of losses and reward curves.
+
+### Setup
+
+```bash
+pip install -e ".[wandb]"
+wandb login
+```
+
+### Usage
+
+Add `--wandb` to any training command:
+
+```bash
+python -m il_based_rl.train_ppo \
+    --env-id Pendulum-v1 \
+    --total-timesteps 200000 \
+    --seed 42 \
+    --wandb
+```
+
+A run name is auto-generated (e.g. `run_20260223_0951_Pendulum-v1_200000`). To set a custom name:
+
+```bash
+python -m il_based_rl.train_ppo --wandb --wandb-run-name "my-experiment"
+```
+
+The full pipeline also supports wandb:
+
+```bash
+python scripts/run_pipeline.py --wandb --ppo-timesteps 200000
+```
+
+### Logged metrics
+
+| Metric | Logged every | Description |
+|---|---|---|
+| `policy_loss` | update | PPO clipped surrogate loss |
+| `value_loss` | update | Critic MSE loss |
+| `entropy` | update | Policy entropy |
+| `eval_reward` | eval interval | Mean reward over evaluation episodes |
+
+All hyperparameters (lr, gamma, clip_range, etc.) are saved as the run config.
 
 ## Stage 2 — Collect Expert Demonstrations
 
