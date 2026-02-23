@@ -45,6 +45,9 @@ def parse_args() -> argparse.Namespace:
         metavar="CHECKPOINT",
         help="Resume from checkpoint. Use --resume to load the latest, or --resume PATH to load a specific file",
     )
+    parser.add_argument("--wandb", action="store_true", help="Enable Weights & Biases logging")
+    parser.add_argument("--wandb-project", type=str, default="il-based-rl", help="W&B project name")
+    parser.add_argument("--wandb-run-name", type=str, default=None, help="W&B run name")
     return parser.parse_args()
 
 
@@ -103,7 +106,14 @@ def main() -> None:
         )
 
     print(f"Training PPO on {args.env_id} for {args.total_timesteps} timesteps...")
-    agent.train(args.env_id, total_timesteps=args.total_timesteps, seed=args.seed)
+    agent.train(
+        args.env_id,
+        total_timesteps=args.total_timesteps,
+        seed=args.seed,
+        wandb_log=args.wandb,
+        wandb_project=args.wandb_project,
+        wandb_run_name=args.wandb_run_name,
+    )
 
     saved_path = agent.save(args.save_path, timestamp=True)
     print(f"Checkpoint saved to {saved_path}")

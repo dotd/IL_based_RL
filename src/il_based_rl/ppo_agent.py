@@ -148,8 +148,38 @@ class PPOAgent:
         eval_interval: int = 10_000,
         eval_episodes: int = 5,
         seed: int | None = None,
+        wandb_log: bool = False,
+        wandb_project: str | None = None,
+        wandb_run_name: str | None = None,
     ) -> list[dict[str, float]]:
         """Full PPO training loop. Returns list of update info dicts."""
+        # --- Optional W&B initialisation ---
+        wb = None
+        if wandb_log:
+            import wandb
+
+            wb = wandb
+            wb.init(
+                project=wandb_project or "il-based-rl",
+                name=wandb_run_name,
+                config={
+                    "env_id": env_id,
+                    "total_timesteps": total_timesteps,
+                    "lr": self.optimizer.param_groups[0]["lr"],
+                    "gamma": self.gamma,
+                    "gae_lambda": self.gae_lambda,
+                    "clip_range": self.clip_range,
+                    "n_steps": self.n_steps,
+                    "n_epochs": self.n_epochs,
+                    "batch_size": self.batch_size,
+                    "entropy_coef": self.entropy_coef,
+                    "max_grad_norm": self.max_grad_norm,
+                    "obs_dim": self.policy.obs_dim,
+                    "action_dim": self.policy.action_dim,
+                    "seed": seed,
+                },
+            )
+
         env = gym.make(env_id)
         if seed is not None:
             env.reset(seed=seed)
@@ -164,6 +194,16 @@ class PPOAgent:
             info["timesteps"] = timesteps_so_far
             logs.append(info)
 
+            if wb is not None:
+                wb.log(
+                    {
+                        "policy_loss": info["policy_loss"],
+                        "value_loss": info["value_loss"],
+                        "entropy": info["entropy"],
+                    },
+                    step=timesteps_so_far,
+                )
+
             # Periodic evaluation
             if timesteps_so_far % eval_interval < self.n_steps:
                 mean_reward = self._evaluate(env_id, eval_episodes, seed)
@@ -174,8 +214,12 @@ class PPOAgent:
                     f"value_loss={info['value_loss']:.4f}  "
                     f"eval_reward={mean_reward:.2f}"
                 )
+                if wb is not None:
+                    wb.log({"eval_reward": mean_reward}, step=timesteps_so_far)
 
         env.close()
+        if wb is not None:
+            wb.finish()
         return logs
 
     def _evaluate(self, env_id: str, num_episodes: int, seed: int | None) -> float:
