@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from pathlib import Path
 
 import gymnasium as gym
@@ -194,9 +195,22 @@ class PPOAgent:
         env.close()
         return float(np.mean(rewards))
 
-    def save(self, path: str | Path) -> None:
-        """Save model checkpoint."""
+    @staticmethod
+    def timestamped_path(path: str | Path) -> Path:
+        """Insert a timestamp before the file extension, e.g. ppo_agent_20260223_0910.pt."""
         path = Path(path)
+        stamp = datetime.now().strftime("%Y%m%d_%H%M")
+        return path.with_stem(f"{path.stem}_{stamp}")
+
+    def save(self, path: str | Path, timestamp: bool = False) -> Path:
+        """Save model checkpoint. Returns the actual path written.
+
+        If *timestamp* is True, a ``_YYYYMMDD_HHMM`` suffix is appended to the
+        filename so that successive runs never overwrite each other.
+        """
+        path = Path(path)
+        if timestamp:
+            path = self.timestamped_path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
         torch.save(
             {
@@ -206,6 +220,7 @@ class PPOAgent:
             },
             path,
         )
+        return path
 
     @classmethod
     def load(

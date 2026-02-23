@@ -57,7 +57,7 @@ def run_pipeline(
     )
     ppo_agent = PPOAgent(ppo_policy, lr=ppo_lr)
     ppo_agent.train(env_id, total_timesteps=ppo_timesteps, seed=seed)
-    ppo_agent.save(ppo_save_path)
+    ppo_save_path = ppo_agent.save(ppo_save_path, timestamp=True)
     print(f"PPO expert saved to {ppo_save_path}\n")
 
     # =====================================================================

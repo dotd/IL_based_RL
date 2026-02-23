@@ -55,8 +55,8 @@ def main() -> None:
     print(f"Training PPO on {args.env_id} for {args.total_timesteps} timesteps...")
     agent.train(args.env_id, total_timesteps=args.total_timesteps, seed=args.seed)
 
-    agent.save(args.save_path)
-    print(f"Checkpoint saved to {args.save_path}")
+    saved_path = agent.save(args.save_path, timestamp=True)
+    print(f"Checkpoint saved to {saved_path}")
 
 
 if __name__ == "__main__":
