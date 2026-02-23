@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from datetime import datetime
 
 import gymnasium as gym
 import numpy as np
@@ -30,6 +31,8 @@ def run_pipeline(
     demo_save_path: str = "demos/expert_demos.npz",
     bc_save_path: str = "checkpoints/bc_student.pt",
     eval_episodes: int = 20,
+    wandb_log: bool = False,
+    wandb_project: str | None = None,
 ) -> None:
     """Run the full RL-to-IL pipeline."""
     if ppo_hidden_dims is None:
@@ -56,7 +59,20 @@ def run_pipeline(
         hidden_dims=ppo_hidden_dims,
     )
     ppo_agent = PPOAgent(ppo_policy, lr=ppo_lr)
-    ppo_agent.train(env_id, total_timesteps=ppo_timesteps, seed=seed)
+
+    wandb_run_name = None
+    if wandb_log:
+        stamp = datetime.now().strftime("%Y%m%d_%H%M")
+        wandb_run_name = f"run_{stamp}_{env_id}_{ppo_timesteps}"
+
+    ppo_agent.train(
+        env_id,
+        total_timesteps=ppo_timesteps,
+        seed=seed,
+        wandb_log=wandb_log,
+        wandb_project=wandb_project,
+        wandb_run_name=wandb_run_name,
+    )
     ppo_save_path = ppo_agent.save(ppo_save_path, timestamp=True)
     print(f"PPO expert saved to {ppo_save_path}\n")
 
@@ -151,6 +167,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--ppo-save-path", type=str, default="checkpoints/ppo_expert.pt")
     parser.add_argument("--demo-save-path", type=str, default="demos/expert_demos.npz")
     parser.add_argument("--bc-save-path", type=str, default="checkpoints/bc_student.pt")
+    parser.add_argument("--wandb", action="store_true", help="Enable Weights & Biases logging")
+    parser.add_argument("--wandb-project", type=str, default="il-based-rl", help="W&B project name")
     return parser.parse_args()
 
 
@@ -171,4 +189,6 @@ if __name__ == "__main__":
         ppo_save_path=args.ppo_save_path,
         demo_save_path=args.demo_save_path,
         bc_save_path=args.bc_save_path,
+        wandb_log=args.wandb,
+        wandb_project=args.wandb_project,
     )
