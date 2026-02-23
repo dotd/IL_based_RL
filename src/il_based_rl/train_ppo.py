@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from datetime import datetime
 from pathlib import Path
 
 from il_based_rl.actor_critic_policy import ActorCriticPolicy
@@ -105,6 +106,12 @@ def main() -> None:
             entropy_coef=args.entropy_coef,
         )
 
+    # --- Generate default wandb run name if not provided ---
+    wandb_run_name = args.wandb_run_name
+    if args.wandb and wandb_run_name is None:
+        stamp = datetime.now().strftime("%Y%m%d_%H%M")
+        wandb_run_name = f"run_{stamp}_{args.env_id}_{args.total_timesteps}"
+
     print(f"Training PPO on {args.env_id} for {args.total_timesteps} timesteps...")
     agent.train(
         args.env_id,
@@ -112,7 +119,7 @@ def main() -> None:
         seed=args.seed,
         wandb_log=args.wandb,
         wandb_project=args.wandb_project,
-        wandb_run_name=args.wandb_run_name,
+        wandb_run_name=wandb_run_name,
     )
 
     saved_path = agent.save(args.save_path, timestamp=True)
